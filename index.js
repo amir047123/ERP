@@ -18,4 +18,4 @@ app.use("/api/users", userRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on ports ${PORT}`));
