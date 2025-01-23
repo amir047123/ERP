@@ -6,6 +6,7 @@ const {
 const registerUser = async (req, res) => {
   try {
     const { fingerprintId, name } = req.body;
+    console.log("Registration Request:", { fingerprintId, name });
 
     const existingUser = await findUserByFingerprint(fingerprintId);
     if (existingUser) {
@@ -13,8 +14,10 @@ const registerUser = async (req, res) => {
     }
 
     const user = await createUser({ fingerprintId, name });
+    console.log("User Registered Successfully:", user);
     res.status(201).json(user);
   } catch (error) {
+    console.error("Registration Error:", error.message);
     res.status(500).json({ error: error.message });
   }
 };
