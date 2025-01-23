@@ -5,6 +5,11 @@ const {
 
 const handleFingerprint = async (req, res) => {
   try {
+    console.log(req.body);
+
+    console.log(req.body.fingerprintId);
+    console.log(req.body.name);
+
     const { mode, fingerprintId, name } = req.body;
 
     if (mode === "register") {
