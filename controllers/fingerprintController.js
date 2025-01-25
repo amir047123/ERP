@@ -1,41 +1,55 @@
 const {
   createUser,
-  findUserByFingerprint,
+  findUserByFingerprintImage,
+  getUserCount,
 } = require("../services/userService");
 
 const handleFingerprint = async (req, res) => {
   try {
-    console.log(req.body);
+    const { rawFingerprintImage } = req.body;
 
-    console.log(req.body.fingerprintId);
-    console.log(req.body.name);
-
-    const { mode, fingerprintId, name } = req.body;
-
-    if (mode === "register") {
-      // Check if the fingerprint already exists
-      const existingUser = await findUserByFingerprint(fingerprintId);
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-
-      // Register the new fingerprint
-      const user = await createUser({ fingerprintId, name });
-      return res
-        .status(201)
-        .json({ message: "User registered successfully", user });
-    } else if (mode === "match") {
-      // Match the fingerprint
-      const user = await findUserByFingerprint(fingerprintId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      return res.status(200).json({ message: "Fingerprint matched", user });
-    } else {
-      return res.status(400).json({ message: "Invalid mode specified" });
+    // Validate fingerprint image
+    if (!rawFingerprintImage) {
+      return res.status(400).json({
+        message: "No fingerprint image provided",
+      });
     }
+
+    // Check for existing fingerprint
+    const existingUser = await findUserByFingerprintImage(rawFingerprintImage);
+
+    if (existingUser) {
+      return res.status(200).json({
+        message: `Match ID ${existingUser.mistId}`,
+        user: existingUser,
+      });
+    }
+
+    // Create new user
+    const userCount = await getUserCount();
+    const mistId = `MIST-${String(userCount + 1).padStart(2, "0")}`;
+    const newUser = await createUser({
+      name: "Unknown User",
+      rawFingerprintImage,
+      mistId,
+    });
+
+    return res.status(201).json({
+      message: `created ID ${newUser.mistId}`,
+      user: newUser,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error handling fingerprint:", error);
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Duplicate fingerprint detected",
+      });
+    }
+
+    return res.status(500).json({
+      error: "An internal server error occurred",
+    });
   }
 };
 

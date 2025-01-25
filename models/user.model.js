@@ -1,11 +1,9 @@
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
-  fingerprintId: { type: Number },
-  name: { type: String },
-  fingerImage: {
-    type: String,
-  },
+  name: { type: String, default: "Unknown User" },
+  rawFingerprintImage: { type: String, required: true, unique: true },
+  mistId: { type: String, unique: true, required: true },
 });
 
 module.exports = mongoose.model("User", UserSchema);
