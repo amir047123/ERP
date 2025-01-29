@@ -1,27 +1,23 @@
 const User = require("../models/user.model");
 
-// Find a user by fingerprint image
+// ✅ Find user by fingerprint hash
+const findUserByFingerprintHash = async (fingerprintHash) => {
+  return await User.findOne({ fingerprintHash }); // ✅ Fix field name
+};
 
-// Create a new user
+// ✅ Create a new user
 const createUser = async (userData) => {
   const user = new User(userData);
   return await user.save();
 };
 
-// Get the total number of users
+// ✅ Get total user count
 const getUserCount = async () => {
   return await User.countDocuments();
 };
-const findUserByMistId = async (mistId) => {
-  return await User.findOne({ mistId });
-};
-const findUserByFingerprintImage = async (rawFingerprintImage) => {
-  return await User.findOne({ rawFingerprintImage });
-};
 
 module.exports = {
-  findUserByFingerprintImage,
+  findUserByFingerprintHash,
   createUser,
   getUserCount,
-  findUserByMistId,
 };

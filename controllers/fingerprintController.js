@@ -1,6 +1,7 @@
+const crypto = require("crypto");
 const {
   createUser,
-  findUserByFingerprintImage,
+  findUserByFingerprintHash,
   getUserCount,
 } = require("../services/userService");
 
@@ -13,8 +14,16 @@ const handleFingerprint = async (req, res) => {
       return res.status(400).json({ message: "No fingerprint image provided" });
     }
 
+    // ✅ Generate SHA256 Hash of Fingerprint Image
+    const fingerprintHash = crypto
+      .createHash("sha256")
+      .update(rawFingerprintImage)
+      .digest("hex");
+
+    console.log("Generated Fingerprint Hash:", fingerprintHash);
+
     console.log("Checking for existing fingerprint in the database...");
-    const existingUser = await findUserByFingerprintImage(rawFingerprintImage);
+    const existingUser = await findUserByFingerprintHash(fingerprintHash);
 
     if (existingUser) {
       console.log(`Fingerprint matched: ID ${existingUser.mistId}`);
@@ -25,34 +34,32 @@ const handleFingerprint = async (req, res) => {
     } else {
       console.log("No matching fingerprint found. Creating new user...");
 
-      // Generate MIST serial ID
+      // ✅ Generate Unique MIST ID
       const userCount = await getUserCount();
       const mistId = `MIST-${String(userCount + 1).padStart(2, "0")}`;
       console.log(`Generated MIST ID: ${mistId}`);
 
-      // Create a new user
+      // ✅ Save fingerprintHash instead of rawFingerprintImage
       const newUser = await createUser({
         name: "Unknown User",
-        rawFingerprintImage,
+        fingerprintHash, // ✅ Store hashed fingerprint, not raw image
         mistId,
       });
 
       console.log("New user created successfully:", newUser);
       return res.status(201).json({
-        message: `created ID ${newUser.mistId}`,
+        message: `Created ID ${newUser.mistId}`,
         user: newUser,
       });
     }
   } catch (error) {
-    console.error("Error handling fingerprint:", error.message);
-
+    console.error("❌ ERROR HANDLING FINGERPRINT:", error);
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ message: "Duplicate fingerprint detected" });
     }
-
-    res.status(500).json({ error: "An internal server error occurred" });
+    res.status(500).json({ error: error.message });
   }
 };
 
